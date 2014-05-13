@@ -41,15 +41,15 @@ type WorkOrder struct {
 }
 
 type Response struct {
-  Id int
-  Result Result
-  CompletedAt time.Time
-  TimeTaken float64
+  Id int `json:"id"`
+  Result Result `json:"result"`
+  CompletedAt time.Time `json:"completed_at"`
+  TimeTaken float64 `json:"time_taken"`
 }
 
 type Result struct {
-  ExitStatus int
-  Message string
+  ExitStatus int `json:"exit_status"`
+  Message string `json:"message"`
 }
 
 func NewFromJson(data string) (wo WorkOrder, error error){
@@ -103,6 +103,7 @@ func (wo *WorkOrder) Execute() (error error) {
     }
   }
 
+  // calculate the time taken to complete the command
   wo.response.TimeTaken = time.Since(start_time).Seconds()
 
   wo.response.Result.Message = output.String()
@@ -114,6 +115,8 @@ func (wo *WorkOrder) Execute() (error error) {
 
 func (wo *WorkOrder) Report() (error error) {
   log.Println("Sending response to devops-web for:", wo.Id)
+
+  // prepare the response object
   wo.response.Id = wo.Id
 
   // create sqs client
@@ -130,12 +133,14 @@ func (wo *WorkOrder) Report() (error error) {
     error = err
   }
 
+  // marshal the response object into json
   data, err := json.Marshal(wo.response)
   if err != nil {
     log.Println("Could not convert response to JSON for:", wo.Id, err)
     error = err
   }
 
+  // send the report to the queue
   _, err = queue.SendMessage(string(data))
   if err != nil {
     log.Println("Could not report:", wo.Id, err)
