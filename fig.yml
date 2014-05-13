@@ -5,5 +5,5 @@ worker:
   environment:
     AWS_ACCESS_KEY_ID: ""
     AWS_SECRET_ACCESS_KEY: ""
-    SQS_QUEUE_NAME: ""
-    RECEIPT_HANDLE: asdf
+    SQS_RECIEVE_QUEUE: ""
+    SQS_REPORT_QUEUE: ""
