@@ -7,6 +7,7 @@ This program will get WorkOrders from a specified SQS queue and execute them in 
 * `SQS_RECIEVE_QUEUE`
 * `SQS_REPORT_QUEUE`
 * `CMD_BASE`
+* `CMD_DIR`
 
 ## Usage
 
@@ -14,4 +15,4 @@ This program will get WorkOrders from a specified SQS queue and execute them in 
 
 ## Example
 
-`AWS_ACCESS_KEY_ID="asdf" AWS_SECRET_ACCESS_KEY="zyx" SQS_RECIEVE_QUEUE="demo" SQS_REPORT_QUEUE="asdf-worker" CMD_BASE="/usr/bin/php" ./sqs_worker`
+`AWS_ACCESS_KEY_ID="asdf" AWS_SECRET_ACCESS_KEY="zyx" SQS_RECIEVE_QUEUE="demo" SQS_REPORT_QUEUE="asdf-worker" CMD_BASE="/usr/bin/php" CMD_DIR="/var/www/current/shell" ./sqs_worker`

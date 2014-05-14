@@ -12,7 +12,7 @@ import "./work_order"
 import "github.com/Mistobaan/sqs"
 
 const (
-  VERSION = "1.0.1"
+  VERSION = "1.0.2"
 )
 
 func init() {

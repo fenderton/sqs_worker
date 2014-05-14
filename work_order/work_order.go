@@ -70,6 +70,7 @@ func (wo *WorkOrder) Execute() (error error) {
   base_args := strings.Split(os.Getenv("CMD_BASE"), " ")
   cmd := exec.Command(base_args[0])
   cmd.Args = append(base_args[0:], wo_args[0:]...)
+  cmd.Dir = os.Getenv("CMD_DIR")
   
   // collect stdout and stderr
   var output bytes.Buffer

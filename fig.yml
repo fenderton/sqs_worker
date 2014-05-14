@@ -9,3 +9,4 @@ worker:
     SQS_RECIEVE_QUEUE: ""
     SQS_REPORT_QUEUE: ""
     CMD_BASE: "/app/fixtures/test.sh"
+    CMD_DIR: "/app/fixtures"
