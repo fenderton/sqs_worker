@@ -17,7 +17,7 @@ Example message:
   "id": 26487,
   "job_id": 11,
   "completed_at": null,
-  "message": "./fixtures/test.sh 0 10",
+  "message": "0 10",
   "result": "Stock Status index was rebuilt successfully",
   "created_at": "2014-05-07T09:42:11.000-07:00",
   "updated_at": "2014-05-07T09:43:06.000-07:00",
@@ -66,9 +66,10 @@ func (wo *WorkOrder) Execute() (error error) {
   log.Println("Starting work on WorkOrder:", wo.Id)
 
   // setup command to be run with arguments from the command line
-  shell := strings.Split(wo.Message, " ")
-  cmd := exec.Command(os.Getenv("CMD_BASE"))
-  cmd.Args = shell[0:]
+  wo_args := strings.Split(wo.Message, " ")
+  base_args := strings.Split(os.Getenv("CMD_BASE"), " ")
+  cmd := exec.Command(base_args[0])
+  cmd.Args = append(base_args[0:], wo_args[0:]...)
   
   // collect stdout and stderr
   var output bytes.Buffer

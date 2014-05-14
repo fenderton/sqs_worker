@@ -3,13 +3,34 @@ package main
 import "os"
 import "log"
 import "sync"
+import "flag"
+import "fmt"
+
 import "./heartbeat"
 import "./work_order"
+
 import "github.com/Mistobaan/sqs"
+
+const (
+  VERSION = "1.0.0"
+)
+
+func init() {
+  print_version := flag.Bool("v", false, "display version and exit")
+
+  // parse command line options
+  flag.Parse()
+
+  // display version and exit
+  if *print_version {
+    fmt.Println("Version:", VERSION)
+    os.Exit(0)
+  }
+}
 
 func main() {
   // access key, secret key, receive queue and report queue should be in ENV variables
-  log.Println("Starting SQS worker...")
+  log.Println("Starting SQS worker version:", VERSION)
 
   // create sqs client
   client, err := sqs.NewFrom(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), "us.east")
