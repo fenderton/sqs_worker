@@ -12,7 +12,7 @@ import "./work_order"
 import "github.com/Mistobaan/sqs"
 
 const (
-  VERSION = "1.0.0"
+  VERSION = "1.0.1"
 )
 
 func init() {
@@ -26,6 +26,9 @@ func init() {
     fmt.Println("Version:", VERSION)
     os.Exit(0)
   }
+
+  log.SetOutput(os.Stdout)
+  log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 }
 
 func main() {
