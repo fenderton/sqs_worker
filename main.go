@@ -24,7 +24,7 @@ func main() {
   }
 
   // get some messages from the sqs queue
-  resp, err := queue.ReceiveMessageWithVisibilityTimeout(4, 60)
+  resp, err := queue.ReceiveMessageWithVisibilityTimeout(10, 60)
   if err != nil {
     log.Fatalf("Could not receive messages:", err)
   }
@@ -45,26 +45,7 @@ func main() {
       log.Println("JSON ERROR:", err)
     } else {
       wg.Add(1)
-      go func() {
-        // start heartbeat
-        heartbeat.Start(queue, message)
-        
-        // execute the work
-        err := wo.Execute()
-        if err != nil {
-          log.Println("Error executing ", wo.Id, err)
-        }
-
-        // send response back to devops-web
-        wo.Report()
-
-        // delete message
-        log.Println("Deleting message:", message.MessageId)
-        queue.DeleteMessage(&message)
-
-        // exit this goroutine
-        wg.Done()
-      }()
+      go process(queue, message, wo, &wg)
     } // if err
   } // for
 
@@ -75,4 +56,28 @@ func main() {
   log.Println("Exiting.")
   os.Exit(0)
 
+}
+
+func process(q *sqs.Queue, m sqs.Message, wo work_order.WorkOrder, wg *sync.WaitGroup) {
+  // start heartbeat
+  beat := heartbeat.Start(q, m)
+  
+  // execute the work
+  err := wo.Execute()
+  if err != nil {
+    log.Println("Error executing ", wo.Id, err)
+  }
+
+  // send response back to devops-web
+  wo.Report()
+
+  // delete message
+  log.Println("Deleting message:", m.MessageId)
+  q.DeleteMessage(&m)
+
+  // stop the heartbeat
+  beat.Stop()
+
+  // exit this goroutine
+  wg.Done()
 }

@@ -16,7 +16,7 @@ Example message:
 {
   "id": 26487,
   "job_id": 11,
-  "completed_at": "2014-05-07T09:43:06.000-07:00",
+  "completed_at": null,
   "message": "./fixtures/test.sh 0 10",
   "result": "Stock Status index was rebuilt successfully",
   "created_at": "2014-05-07T09:42:11.000-07:00",
@@ -29,11 +29,11 @@ Example message:
 type WorkOrder struct {
   Id int `json:"id"`
   JobId int `json:"job_id"`
-  CompletedAt time.Time `json:"completed_at"`
+  CompletedAt *time.Time `json:"completed_at"`
   Message string `json:"message"`
   Result string `json:"result"`
-  CreatedAt time.Time `json:"created_at"`
-  UpdatedAt time.Time `json:"updated_at"`
+  CreatedAt *time.Time `json:"created_at"`
+  UpdatedAt *time.Time `json:"updated_at"`
   ExitStatus int `json:"exit_status"`
   Queue string `json:"queue"`
 
@@ -43,7 +43,7 @@ type WorkOrder struct {
 type Response struct {
   Id int `json:"id"`
   Result Result `json:"result"`
-  CompletedAt time.Time `json:"completed_at"`
+  CompletedAt *time.Time `json:"completed_at"`
   TimeTaken float64 `json:"time_taken"`
 }
 
@@ -67,8 +67,8 @@ func (wo *WorkOrder) Execute() (error error) {
 
   // setup command to be run with arguments from the command line
   shell := strings.Split(wo.Message, " ")
-  cmd := exec.Command(shell[0])
-  cmd.Args = shell[1:]
+  cmd := exec.Command(os.Getenv("CMD_BASE"))
+  cmd.Args = shell[0:]
   
   // collect stdout and stderr
   var output bytes.Buffer
@@ -107,7 +107,8 @@ func (wo *WorkOrder) Execute() (error error) {
   wo.response.TimeTaken = time.Since(start_time).Seconds()
 
   wo.response.Result.Message = output.String()
-  wo.response.CompletedAt = time.Now()
+  current_time := time.Now()
+  wo.response.CompletedAt = &current_time
 
   log.Println("Completed WorkOrder:", wo.Id)
   return

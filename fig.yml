@@ -1,5 +1,6 @@
 worker:
-  image: ianneub/go
+  build: .
+  command: /bin/bash -c 'while go run main.go; do echo ""; done'
   volumes:
     - .:/app
   environment:
@@ -7,3 +8,4 @@ worker:
     AWS_SECRET_ACCESS_KEY: ""
     SQS_RECIEVE_QUEUE: ""
     SQS_REPORT_QUEUE: ""
+    CMD_BASE: "/app/fixtures/test.sh"
