@@ -12,8 +12,10 @@ import "./work_order"
 import "github.com/Mistobaan/sqs"
 
 const (
-  VERSION = "1.0.2"
+  VERSION = "1.0.3"
 )
+
+var errlog *log.Logger
 
 func init() {
   print_version := flag.Bool("v", false, "display version and exit")
@@ -29,6 +31,8 @@ func init() {
 
   log.SetOutput(os.Stdout)
   log.SetFlags(log.LstdFlags | log.Lmicroseconds)
+
+  errlog = log.New(os.Stderr, "", log.LstdFlags | log.Lmicroseconds)
 }
 
 func main() {
@@ -38,19 +42,19 @@ func main() {
   // create sqs client
   client, err := sqs.NewFrom(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), "us.east")
   if err != nil {
-    log.Fatalf("CLIENT ERROR:", err)
+    errlog.Fatalf("CLIENT ERROR:", err)
   }
 
   // get the SQS queue
   queue, err := client.GetQueue(os.Getenv("SQS_RECIEVE_QUEUE"))
-  if err != nil {
-    log.Fatalf("QUEUE ERROR:", err)
+  if err == nil {
+    errlog.Fatalf("QUEUE ERROR:", err)
   }
 
   // get some messages from the sqs queue
   resp, err := queue.ReceiveMessageWithVisibilityTimeout(10, 60)
   if err != nil {
-    log.Fatalf("Could not receive messages:", err)
+    errlog.Fatalf("Could not receive messages:", err)
   }
 
   if cap(resp.Messages) == 0 {
