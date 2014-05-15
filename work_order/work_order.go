@@ -137,6 +137,7 @@ func (wo *WorkOrder) Report() (error error) {
   if err != nil {
     log.Println("Could not report:", wo.Id, err)
     error = err
+    return
   }
 
   // get the SQS queue
@@ -144,6 +145,7 @@ func (wo *WorkOrder) Report() (error error) {
   if err != nil {
     log.Println("REPORT QUEUE ERROR:", wo.Id, err)
     error = err
+    return
   }
 
   // marshal the response object into json
@@ -151,6 +153,7 @@ func (wo *WorkOrder) Report() (error error) {
   if err != nil {
     log.Println("Could not convert response to JSON for:", wo.Id, err)
     error = err
+    return
   }
 
   // send the report to the queue
