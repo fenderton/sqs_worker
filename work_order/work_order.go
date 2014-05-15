@@ -10,6 +10,10 @@ import "bytes"
 import "strings"
 import "github.com/Mistobaan/sqs"
 
+const (
+  DEBUG = false
+)
+
 /*
 Example message:
 
@@ -70,7 +74,7 @@ func NewFromJson(data string) (wo WorkOrder, error error){
 
 // Execute a WorkOrder and populate its response object
 func (wo *WorkOrder) Execute() (error error) {
-  log.Println("Starting work on WorkOrder:", wo.Id)
+  log.Println("Starting work on WorkOrder:", wo.Id, "with:", wo.Message)
 
   // setup command to be run with arguments from the command line
   wo_args := strings.Split(wo.Message, " ")
@@ -120,14 +124,14 @@ func (wo *WorkOrder) Execute() (error error) {
   // attach the output of the command to the result message
   wo.response.Result.Message = output.String()  
 
-  log.Println("Completed WorkOrder:", wo.Id)
+  if DEBUG { log.Println("Completed WorkOrder:", wo.Id) }
   return
 }
 
 // Report on the result of the WorkOrders execution.
 // This method requires that the WorkOrder has been Executed.
 func (wo *WorkOrder) Report() (error error) {
-  log.Println("Sending response to devops-web for:", wo.Id)
+  if DEBUG { log.Println("Sending response to devops-web for:", wo.Id) }
 
   // prepare the response object
   wo.response.Id = wo.Id

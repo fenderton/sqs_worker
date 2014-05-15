@@ -12,7 +12,8 @@ import "./work_order"
 import "github.com/Mistobaan/sqs"
 
 const (
-  VERSION = "1.0.3"
+  VERSION = "1.0.4"
+  DEBUG = false
 )
 
 var errlog *log.Logger
@@ -57,7 +58,7 @@ func main() {
     errlog.Fatalf("Could not receive messages:", err)
   }
 
-  if cap(resp.Messages) == 0 {
+  if DEBUG && cap(resp.Messages) == 0 {
     log.Println("Did not find any messages in the queue.")
   }
 
@@ -81,7 +82,7 @@ func main() {
   wg.Wait()
 
   // quit
-  log.Println("Exiting.")
+  if DEBUG { log.Println("Exiting.") }
   os.Exit(0)
 
 }
@@ -101,7 +102,7 @@ func process(q *sqs.Queue, m sqs.Message, wo work_order.WorkOrder, wg *sync.Wait
   wo.Report()
 
   // delete message
-  log.Println("Deleting message:", m.MessageId)
+  if DEBUG { log.Println("Deleting message:", m.MessageId) }
   q.DeleteMessage(&m)
 
   // stop the heartbeat
