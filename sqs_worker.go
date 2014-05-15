@@ -47,7 +47,7 @@ func main() {
 
   // get the SQS queue
   queue, err := client.GetQueue(os.Getenv("SQS_RECIEVE_QUEUE"))
-  if err == nil {
+  if err != nil {
     errlog.Fatalf("QUEUE ERROR:", err)
   }
 
@@ -74,8 +74,8 @@ func main() {
     } else {
       wg.Add(1)
       go process(queue, message, wo, &wg)
-    } // if err
-  } // for
+    }
+  }
 
   // wait for each goroutine to exit
   wg.Wait()
@@ -86,6 +86,7 @@ func main() {
 
 }
 
+// process a message from the SQS queue. This should be run inside a goroutine.
 func process(q *sqs.Queue, m sqs.Message, wo work_order.WorkOrder, wg *sync.WaitGroup) {
   // start heartbeat
   beat := heartbeat.Start(q, m)

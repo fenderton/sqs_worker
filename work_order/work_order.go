@@ -26,32 +26,38 @@ Example message:
 }
 */
 
+// WorkOrder contains all the details needed to execute and report on a WorkOrder object.
+// This struct maps directly to the WorkOrder in the Jobs system.
 type WorkOrder struct {
   Id int `json:"id"`
   JobId int `json:"job_id"`
   CompletedAt *time.Time `json:"completed_at"`
-  Message string `json:"message"`
-  Result string `json:"result"`
+  Message string `json:"message"` // command to be executed
+  Result string `json:"result"` // both std and err output of the command
   CreatedAt *time.Time `json:"created_at"`
   UpdatedAt *time.Time `json:"updated_at"`
-  ExitStatus int `json:"exit_status"`
-  Queue string `json:"queue"`
+  ExitStatus int `json:"exit_status"` // exit code from the program
+  Queue string `json:"queue"` // name of the SQS queue this message was posted to
 
   response Response
 }
 
+// Response object is what the Jobs system looks for the in the completed jobs SQS queue.
+// It should contain the result and timing of the WorkOrder's execution.
 type Response struct {
   Id int `json:"id"`
   Result Result `json:"result"`
   CompletedAt *time.Time `json:"completed_at"`
-  TimeTaken float64 `json:"time_taken"`
+  TimeTaken float64 `json:"time_taken"` // time taken to complete execution in seconds
 }
 
+// Result contains the exit status and the output of the command that was run.
 type Result struct {
-  ExitStatus int `json:"exit_status"`
-  Message string `json:"message"`
+  ExitStatus int `json:"exit_status"` // exit code from the program
+  Message string `json:"message"` // both std and err output of the command
 }
 
+// Create a new WorkOrder struct from a JSON encoded string
 func NewFromJson(data string) (wo WorkOrder, error error){
   bytes := []byte(data)
   err := json.Unmarshal(bytes, &wo)
@@ -62,6 +68,7 @@ func NewFromJson(data string) (wo WorkOrder, error error){
   return
 }
 
+// Execute a WorkOrder and populate its response object
 func (wo *WorkOrder) Execute() (error error) {
   log.Println("Starting work on WorkOrder:", wo.Id)
 
@@ -106,16 +113,19 @@ func (wo *WorkOrder) Execute() (error error) {
   }
 
   // calculate the time taken to complete the command
-  wo.response.TimeTaken = time.Since(start_time).Seconds()
+  end_time := time.Now()
+  wo.response.TimeTaken = end_time.Sub(start_time).Seconds()
+  wo.response.CompletedAt = &end_time
 
-  wo.response.Result.Message = output.String()
-  current_time := time.Now()
-  wo.response.CompletedAt = &current_time
+  // attach the output of the command to the result message
+  wo.response.Result.Message = output.String()  
 
   log.Println("Completed WorkOrder:", wo.Id)
   return
 }
 
+// Report on the result of the WorkOrders execution.
+// This method requires that the WorkOrder has been Executed.
 func (wo *WorkOrder) Report() (error error) {
   log.Println("Sending response to devops-web for:", wo.Id)
 

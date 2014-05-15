@@ -4,10 +4,12 @@ import "log"
 import "time"
 import "github.com/Mistobaan/sqs"
 
+// simple struct that holds a reference to the ticker
 type Heartbeat struct {
   ticker *time.Ticker
 }
 
+// Start a heartbeat against a given queue and message
 func Start(q *sqs.Queue, m sqs.Message) (heartbeat Heartbeat) {
   log.Println("Starting heartbeat on:", m.MessageId)
 
@@ -22,10 +24,12 @@ func Start(q *sqs.Queue, m sqs.Message) (heartbeat Heartbeat) {
   return
 }
 
+// Stop the heartbeat
 func (heartbeat Heartbeat) Stop() {
   heartbeat.ticker.Stop()
 }
 
+// Send a heartbeat to SQS notifying it that we are still working on the message.
 func beat(queue *sqs.Queue, message sqs.Message, t time.Time) {
   log.Println("Sending heartbeat for:", message.MessageId)
 
