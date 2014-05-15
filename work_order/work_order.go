@@ -5,14 +5,10 @@ import "encoding/json"
 import "time"
 import "os/exec"
 import "syscall"
-import "log"
 import "bytes"
 import "strings"
 import "github.com/Mistobaan/sqs"
-
-const (
-  DEBUG = false
-)
+import "github.com/ianneub/logger"
 
 /*
 Example message:
@@ -74,7 +70,7 @@ func NewFromJson(data string) (wo WorkOrder, error error){
 
 // Execute a WorkOrder and populate its response object
 func (wo *WorkOrder) Execute() (error error) {
-  log.Println("Starting work on WorkOrder:", wo.Id, "with:", wo.Message)
+  logger.Info("Starting work on WorkOrder:", wo.Id, "with:", wo.Message)
 
   // setup command to be run with arguments from the command line
   wo_args := strings.Split(wo.Message, " ")
@@ -93,7 +89,7 @@ func (wo *WorkOrder) Execute() (error error) {
 
   // execute the command
   if err := cmd.Start(); err != nil {
-    log.Println("cmd.Start:", err)
+    logger.Info("cmd.Start:", err)
     error = err
   }
 
@@ -107,11 +103,11 @@ func (wo *WorkOrder) Execute() (error error) {
       // defined for both Unix and Windows and in both cases has
       // an ExitStatus() method with the same signature.
       if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
-        // log.Printf("Exit Status: %d", status.ExitStatus())
+        // logger.Info("Exit Status: %d", status.ExitStatus())
         wo.response.Result.ExitStatus = status.ExitStatus()
       }
     } else {
-      log.Printf("cmd.Wait: %v", err)
+      logger.Error("cmd.Wait: %v", err)
       error = err
     }
   }
@@ -124,14 +120,14 @@ func (wo *WorkOrder) Execute() (error error) {
   // attach the output of the command to the result message
   wo.response.Result.Message = output.String()  
 
-  if DEBUG { log.Println("Completed WorkOrder:", wo.Id) }
+  logger.Debug("Completed WorkOrder:", wo.Id)
   return
 }
 
 // Report on the result of the WorkOrders execution.
 // This method requires that the WorkOrder has been Executed.
 func (wo *WorkOrder) Report() (error error) {
-  if DEBUG { log.Println("Sending response to devops-web for:", wo.Id) }
+  logger.Debug("Sending response to devops-web for:", wo.Id)
 
   // prepare the response object
   wo.response.Id = wo.Id
@@ -139,7 +135,7 @@ func (wo *WorkOrder) Report() (error error) {
   // create sqs client
   client, err := sqs.NewFrom(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), "us.east")
   if err != nil {
-    log.Println("Could not report:", wo.Id, err)
+    logger.Error("Could not report:", wo.Id, err)
     error = err
     return
   }
@@ -147,7 +143,7 @@ func (wo *WorkOrder) Report() (error error) {
   // get the SQS queue
   queue, err := client.GetQueue(os.Getenv("SQS_REPORT_QUEUE"))
   if err != nil {
-    log.Println("REPORT QUEUE ERROR:", wo.Id, err)
+    logger.Error("REPORT QUEUE ERROR:", wo.Id, err)
     error = err
     return
   }
@@ -155,7 +151,7 @@ func (wo *WorkOrder) Report() (error error) {
   // marshal the response object into json
   data, err := json.Marshal(wo.response)
   if err != nil {
-    log.Println("Could not convert response to JSON for:", wo.Id, err)
+    logger.Error("Could not convert response to JSON for:", wo.Id, err)
     error = err
     return
   }
@@ -163,7 +159,7 @@ func (wo *WorkOrder) Report() (error error) {
   // send the report to the queue
   _, err = queue.SendMessage(string(data))
   if err != nil {
-    log.Println("Could not report:", wo.Id, err)
+    logger.Error("Could not report:", wo.Id, err)
     error = err
   }
 

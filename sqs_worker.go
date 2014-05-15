@@ -1,7 +1,6 @@
 package main
 
 import "os"
-import "log"
 import "sync"
 import "flag"
 import "fmt"
@@ -10,13 +9,11 @@ import "./heartbeat"
 import "./work_order"
 
 import "github.com/Mistobaan/sqs"
+import "github.com/ianneub/logger"
 
 const (
-  VERSION = "1.0.4"
-  DEBUG = false
+  VERSION = "1.0.5"
 )
-
-var errlog *log.Logger
 
 func init() {
   print_version := flag.Bool("v", false, "display version and exit")
@@ -26,40 +23,38 @@ func init() {
 
   // display version and exit
   if *print_version {
-    fmt.Println("Version:", VERSION)
+    fmt.Println("SQS worker version:", VERSION)
     os.Exit(0)
   }
 
-  log.SetOutput(os.Stdout)
-  log.SetFlags(log.LstdFlags | log.Lmicroseconds)
-
-  errlog = log.New(os.Stderr, "", log.LstdFlags | log.Lmicroseconds)
+  // set debug
+  // logger.SetDebug(true)
 }
 
 func main() {
   // access key, secret key, receive queue and report queue should be in ENV variables
-  log.Println("Starting SQS worker version:", VERSION)
+  logger.Info("Starting SQS worker version:", VERSION)
 
   // create sqs client
   client, err := sqs.NewFrom(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), "us.east")
   if err != nil {
-    errlog.Fatalf("CLIENT ERROR:", err)
+    logger.Fatal("CLIENT ERROR:", err, "asdf", "asdfdasfd")
   }
 
   // get the SQS queue
   queue, err := client.GetQueue(os.Getenv("SQS_RECIEVE_QUEUE"))
   if err != nil {
-    errlog.Fatalf("QUEUE ERROR:", err)
+    logger.Fatal("QUEUE ERROR:", err)
   }
 
   // get some messages from the sqs queue
   resp, err := queue.ReceiveMessageWithVisibilityTimeout(10, 60)
   if err != nil {
-    errlog.Fatalf("Could not receive messages:", err)
+    logger.Fatal("Could not receive messages:", err)
   }
 
-  if DEBUG && cap(resp.Messages) == 0 {
-    log.Println("Did not find any messages in the queue.")
+  if cap(resp.Messages) == 0 {
+    logger.Debug("Did not find any messages in the queue.")
   }
 
   // create the wait group
@@ -70,8 +65,8 @@ func main() {
     // get the message details
     wo, err := work_order.NewFromJson(message.Body)
     if err != nil {
-      log.Println("Could not process SQS message:", message.MessageId)
-      log.Println("JSON ERROR:", err)
+      logger.Info("Could not process SQS message:", message.MessageId)
+      logger.Info("JSON ERROR:", err)
     } else {
       wg.Add(1)
       go process(queue, message, wo, &wg)
@@ -82,7 +77,7 @@ func main() {
   wg.Wait()
 
   // quit
-  if DEBUG { log.Println("Exiting.") }
+  logger.Debug("Exiting.")
   os.Exit(0)
 
 }
@@ -95,14 +90,14 @@ func process(q *sqs.Queue, m sqs.Message, wo work_order.WorkOrder, wg *sync.Wait
   // execute the work
   err := wo.Execute()
   if err != nil {
-    log.Println("Error executing ", wo.Id, err)
+    logger.Error("Error executing ", wo.Id, err)
   }
 
   // send response back to devops-web
   wo.Report()
 
   // delete message
-  if DEBUG { log.Println("Deleting message:", m.MessageId) }
+  logger.Debug("Deleting message:", m.MessageId)
   q.DeleteMessage(&m)
 
   // stop the heartbeat

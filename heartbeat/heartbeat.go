@@ -1,12 +1,8 @@
 package heartbeat
 
-import "log"
 import "time"
 import "github.com/Mistobaan/sqs"
-
-const (
-  DEBUG = false
-)
+import "github.com/ianneub/logger"
 
 // simple struct that holds a reference to the ticker
 type Heartbeat struct {
@@ -15,7 +11,7 @@ type Heartbeat struct {
 
 // Start a heartbeat against a given queue and message
 func Start(q *sqs.Queue, m sqs.Message) (heartbeat Heartbeat) {
-  if DEBUG { log.Println("Starting heartbeat on:", m.MessageId) }
+  logger.Debug("Starting heartbeat on:", m.MessageId)
 
   heartbeat.ticker = time.NewTicker(50 * time.Second)
   go func() {
@@ -35,11 +31,11 @@ func (heartbeat Heartbeat) Stop() {
 
 // Send a heartbeat to SQS notifying it that we are still working on the message.
 func beat(queue *sqs.Queue, message sqs.Message, t time.Time) {
-  if DEBUG { log.Println("Sending heartbeat for:", message.MessageId) }
+  logger.Debug("Sending heartbeat for:", message.MessageId)
 
   // change the sqs message visibility
   _, err := queue.ChangeMessageVisibility(&message, 2 * 60)
   if (err != nil) {
-    log.Println("ERROR:", err)
+    logger.Error("ERROR:", err)
   }
 }
