@@ -36,6 +36,6 @@ func beat(queue *sqs.Queue, message sqs.Message, t time.Time) {
   // change the sqs message visibility
   _, err := queue.ChangeMessageVisibility(&message, 2 * 60)
   if (err != nil) {
-    logger.Error("ERROR:", err)
+    logger.Error("HEARTBEAT ERROR:", err)
   }
 }

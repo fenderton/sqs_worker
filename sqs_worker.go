@@ -12,11 +12,12 @@ import "github.com/Mistobaan/sqs"
 import "github.com/ianneub/logger"
 
 const (
-  VERSION = "1.0.5"
+  VERSION = "1.0.6"
 )
 
 func init() {
   print_version := flag.Bool("v", false, "display version and exit")
+  debug := flag.Bool("d", false, "enable debug mode")
 
   // parse command line options
   flag.Parse()
@@ -28,7 +29,9 @@ func init() {
   }
 
   // set debug
-  // logger.SetDebug(true)
+  if *debug {
+    logger.SetDebug(true)
+  }
 }
 
 func main() {
@@ -96,12 +99,15 @@ func process(q *sqs.Queue, m sqs.Message, wo work_order.WorkOrder, wg *sync.Wait
   // send response back to devops-web
   wo.Report()
 
-  // delete message
-  logger.Debug("Deleting message:", m.MessageId)
-  q.DeleteMessage(&m)
-
   // stop the heartbeat
   beat.Stop()
+
+  // delete message
+  logger.Debug("Deleting message:", m.MessageId)
+  _, err = q.DeleteMessage(&m)
+  if err != nil {
+    logger.Error("ERROR: Couldn't delete message:", m, err)
+  }
 
   // exit this goroutine
   wg.Done()
