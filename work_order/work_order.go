@@ -7,7 +7,7 @@ import "os/exec"
 import "syscall"
 import "bytes"
 import "strings"
-import "github.com/Mistobaan/sqs"
+import "github.com/crowdmob/goamz/sqs"
 import "github.com/ianneub/logger"
 
 /*
@@ -70,7 +70,7 @@ func NewFromJson(data string) (wo WorkOrder, error error){
 
 // Execute a WorkOrder and populate its response object
 func (wo *WorkOrder) Execute() (error error) {
-  logger.Info("Starting work on WorkOrder:", wo.Id, "with:", wo.Message)
+  logger.Info("Starting work on WorkOrder: %d with '%s'", wo.Id, wo.Message)
 
   // setup command to be run with arguments from the command line
   wo_args := strings.Split(wo.Message, " ")
@@ -89,7 +89,7 @@ func (wo *WorkOrder) Execute() (error error) {
 
   // execute the command
   if err := cmd.Start(); err != nil {
-    logger.Info("cmd.Start:", err)
+    logger.Error("cmd.Start:", err)
     error = err
   }
 
@@ -120,14 +120,15 @@ func (wo *WorkOrder) Execute() (error error) {
   // attach the output of the command to the result message
   wo.response.Result.Message = output.String()  
 
-  logger.Debug("Completed WorkOrder:", wo.Id)
+  logger.Debug("Completed WorkOrder: %d", wo.Id)
   return
 }
 
 // Report on the result of the WorkOrders execution.
 // This method requires that the WorkOrder has been Executed.
 func (wo *WorkOrder) Report() (error error) {
-  logger.Debug("Sending response to devops-web for:", wo.Id)
+  report_queue := os.Getenv("SQS_REPORT_QUEUE")
+  logger.Debug("Sending response to '%s' for: %d", report_queue, wo.Id)
 
   // prepare the response object
   wo.response.Id = wo.Id
@@ -135,15 +136,15 @@ func (wo *WorkOrder) Report() (error error) {
   // create sqs client
   client, err := sqs.NewFrom(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), "us.east")
   if err != nil {
-    logger.Error("Could not report:", wo.Id, err)
+    logger.Error("Could not report: %d", wo.Id, err)
     error = err
     return
   }
 
   // get the SQS queue
-  queue, err := client.GetQueue(os.Getenv("SQS_REPORT_QUEUE"))
+  queue, err := client.GetQueue(report_queue)
   if err != nil {
-    logger.Error("REPORT QUEUE ERROR:", wo.Id, err)
+    logger.Error("REPORT QUEUE ERROR: %d", wo.Id, err)
     error = err
     return
   }
@@ -151,7 +152,7 @@ func (wo *WorkOrder) Report() (error error) {
   // marshal the response object into json
   data, err := json.Marshal(wo.response)
   if err != nil {
-    logger.Error("Could not convert response to JSON for:", wo.Id, err)
+    logger.Error("Could not convert response to JSON for: %d", wo.Id, err)
     error = err
     return
   }
@@ -159,7 +160,7 @@ func (wo *WorkOrder) Report() (error error) {
   // send the report to the queue
   _, err = queue.SendMessage(string(data))
   if err != nil {
-    logger.Error("Could not report:", wo.Id, err)
+    logger.Error("Could not report: %d", wo.Id, err)
     error = err
   }
 

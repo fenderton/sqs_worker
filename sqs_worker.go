@@ -8,11 +8,11 @@ import "fmt"
 import "./heartbeat"
 import "./work_order"
 
-import "github.com/Mistobaan/sqs"
+import "github.com/crowdmob/goamz/sqs"
 import "github.com/ianneub/logger"
 
 const (
-  VERSION = "1.0.6"
+  VERSION = "1.0.7"
 )
 
 func init() {
@@ -36,7 +36,7 @@ func init() {
 
 func main() {
   // access key, secret key, receive queue and report queue should be in ENV variables
-  logger.Info("Starting SQS worker version:", VERSION)
+  logger.Info("Starting SQS worker version: %s", VERSION)
 
   // create sqs client
   client, err := sqs.NewFrom(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), "us.east")
@@ -103,7 +103,7 @@ func process(q *sqs.Queue, m sqs.Message, wo work_order.WorkOrder, wg *sync.Wait
   beat.Stop()
 
   // delete message
-  logger.Debug("Deleting message:", m.MessageId)
+  logger.Debug("Deleting message: %s", m.MessageId)
   _, err = q.DeleteMessage(&m)
   if err != nil {
     logger.Error("ERROR: Couldn't delete message:", m, err)

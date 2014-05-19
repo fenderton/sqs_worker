@@ -1,6 +1,6 @@
 worker:
   build: .
-  command: /bin/bash -c 'while go run main.go; do echo ""; done'
+  command: /bin/bash -c 'while go run sqs_worker.go -d; do echo ""; done'
   volumes:
     - .:/app
   environment:
