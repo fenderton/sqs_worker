@@ -9,7 +9,7 @@ echo "got arg3: $3"
 
 echo "CWD: `pwd`"
 
-sleep 5
+sleep $2
 
 echo "done"
 
