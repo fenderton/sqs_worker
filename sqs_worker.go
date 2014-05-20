@@ -12,7 +12,7 @@ import "github.com/crowdmob/goamz/sqs"
 import "github.com/ianneub/logger"
 
 const (
-  VERSION = "1.0.10"
+  VERSION = "1.0.11"
 )
 
 func init() {
@@ -30,9 +30,7 @@ func init() {
 
   // set debug
   if *debug {
-    logger.SetDebug(false)
-  } else {
-    logger.SetDebug(false)
+    logger.SetDebug(true)
   }
 }
 
