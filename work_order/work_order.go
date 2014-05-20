@@ -70,7 +70,7 @@ func NewFromJson(data string) (wo WorkOrder, error error){
 
 // Execute a WorkOrder and populate its response object
 func (wo *WorkOrder) Execute() (error error) {
-  logger.Info("Starting work on WorkOrder: %d with '%s'", wo.Id, wo.Message)
+  logger.Info("Starting work on WorkOrder: %d with \"%s\"", wo.Id, wo.Message)
 
   // setup command to be run with arguments from the command line
   wo_args := strings.Split(wo.Message, " ")

@@ -12,7 +12,7 @@ import "github.com/crowdmob/goamz/sqs"
 import "github.com/ianneub/logger"
 
 const (
-  VERSION = "1.0.8"
+  VERSION = "1.0.10"
 )
 
 func init() {
@@ -30,7 +30,9 @@ func init() {
 
   // set debug
   if *debug {
-    logger.SetDebug(true)
+    logger.SetDebug(false)
+  } else {
+    logger.SetDebug(false)
   }
 }
 
@@ -68,8 +70,7 @@ func main() {
     // get the message details
     wo, err := work_order.NewFromJson(message.Body)
     if err != nil {
-      logger.Info("Could not process SQS message:", message.MessageId)
-      logger.Info("JSON ERROR:", err)
+      logger.Info("Could not process SQS message: %s with JSON ERROR: %v", message.MessageId, err)
     } else {
       wg.Add(1)
       go process(queue, message, wo, &wg)
@@ -88,12 +89,12 @@ func main() {
 // process a message from the SQS queue. This should be run inside a goroutine.
 func process(q *sqs.Queue, m sqs.Message, wo work_order.WorkOrder, wg *sync.WaitGroup) {
   // start heartbeat
-  beat := heartbeat.Start(q, m)
+  beat := heartbeat.Start(q, &m)
   
   // execute the work
   err := wo.Execute()
   if err != nil {
-    logger.Error("Error executing ", wo.Id, err)
+    logger.Error("Error executing: %d - %v", wo.Id, err)
   }
 
   // send response back to devops-web
@@ -106,7 +107,7 @@ func process(q *sqs.Queue, m sqs.Message, wo work_order.WorkOrder, wg *sync.Wait
   logger.Debug("Deleting message: %s", m.MessageId)
   _, err = q.DeleteMessage(&m)
   if err != nil {
-    logger.Error("ERROR: Couldn't delete message:", m, err)
+    logger.Error("ERROR: Couldn't delete message: %s - %v", m.MessageId, err)
   }
 
   // exit this goroutine
