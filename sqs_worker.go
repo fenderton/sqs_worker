@@ -12,7 +12,7 @@ import "github.com/crowdmob/goamz/sqs"
 import "github.com/ianneub/logger"
 
 const (
-  VERSION = "1.0.11"
+  VERSION = "1.0.12"
 )
 
 func init() {
@@ -36,7 +36,7 @@ func init() {
 
 func main() {
   // access key, secret key, receive queue and report queue should be in ENV variables
-  logger.Info("Starting SQS worker version: %s", VERSION)
+  logger.Debug("Starting SQS worker version: %s", VERSION)
 
   // create sqs client
   client, err := sqs.NewFrom(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), "us.east")
@@ -68,7 +68,7 @@ func main() {
     // get the message details
     wo, err := work_order.NewFromJson(message.Body)
     if err != nil {
-      logger.Info("Could not process SQS message: %s with JSON ERROR: %v", message.MessageId, err)
+      logger.Error("Could not process SQS message: %s with JSON ERROR: %v", message.MessageId, err)
     } else {
       wg.Add(1)
       go process(queue, message, wo, &wg)
