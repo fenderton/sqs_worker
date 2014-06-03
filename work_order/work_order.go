@@ -136,7 +136,7 @@ func (wo *WorkOrder) Report() (error error) {
   // create sqs client
   client, err := sqs.NewFrom(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), "us.east")
   if err != nil {
-    logger.Error("Could not report: %d", wo.Id, err)
+    logger.Error("Could not report: %d - %v", wo.Id, err)
     error = err
     return
   }
@@ -144,7 +144,7 @@ func (wo *WorkOrder) Report() (error error) {
   // get the SQS queue
   queue, err := client.GetQueue(report_queue)
   if err != nil {
-    logger.Error("REPORT QUEUE ERROR: %d", wo.Id, err)
+    logger.Error("REPORT QUEUE ERROR: %d - %v", wo.Id, err)
     error = err
     return
   }
@@ -152,7 +152,7 @@ func (wo *WorkOrder) Report() (error error) {
   // marshal the response object into json
   data, err := json.Marshal(wo.response)
   if err != nil {
-    logger.Error("Could not convert response to JSON for: %d", wo.Id, err)
+    logger.Error("Could not convert response to JSON for: %d - %v", wo.Id, err)
     error = err
     return
   }
@@ -160,7 +160,7 @@ func (wo *WorkOrder) Report() (error error) {
   // send the report to the queue
   _, err = queue.SendMessage(string(data))
   if err != nil {
-    logger.Error("Could not report: %d", wo.Id, err)
+    logger.Error("Could not report: %d - %v", wo.Id, err)
     error = err
   }
 

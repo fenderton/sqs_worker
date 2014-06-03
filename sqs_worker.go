@@ -12,7 +12,7 @@ import "github.com/crowdmob/goamz/sqs"
 import "github.com/ianneub/logger"
 
 const (
-  VERSION = "1.0.12"
+  VERSION = "1.0.13"
 )
 
 func init() {
@@ -86,6 +86,8 @@ func main() {
 
 // process a message from the SQS queue. This should be run inside a goroutine.
 func process(q *sqs.Queue, m sqs.Message, wo work_order.WorkOrder, wg *sync.WaitGroup) {
+  logger.Debug("Starting process on %d from '%s'", wo.Id, m.MessageId)
+
   // start heartbeat
   beat := heartbeat.Start(q, &m)
   
