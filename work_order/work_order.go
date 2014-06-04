@@ -149,6 +149,12 @@ func (wo *WorkOrder) Report() (error error) {
     return
   }
 
+  // trim the message so that it will fit in SQS
+  if len(wo.response.Result.Message) > 60000 {
+    logger.Info("Trimming WorkOrder %d message down from %d chars", wo.Id, len(wo.response.Result.Message))
+    wo.response.Result.Message = wo.response.Result.Message[0:30000] + "\n\n...(truncated)...\n\n" + wo.response.Result.Message[len(wo.response.Result.Message)-30000:]
+  }
+
   // marshal the response object into json
   data, err := json.Marshal(wo.response)
   if err != nil {
