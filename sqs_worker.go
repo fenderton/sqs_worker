@@ -4,6 +4,7 @@ import "os"
 import "sync"
 import "flag"
 import "fmt"
+import "strconv"
 
 import "./heartbeat"
 import "./work_order"
@@ -12,7 +13,7 @@ import "github.com/crowdmob/goamz/sqs"
 import "github.com/ianneub/logger"
 
 const (
-  VERSION = "1.0.15"
+  VERSION = "1.1.0"
 )
 
 func init() {
@@ -35,25 +36,31 @@ func init() {
 }
 
 func main() {
+  // get worker count
+  workers, err := strconv.Atoi(os.Getenv("WORKER_COUNT"))
+  if err != nil {
+    workers = 10
+  }
+
   // access key, secret key, receive queue and report queue should be in ENV variables
-  logger.Debug("Starting SQS worker version: %s", VERSION)
+  logger.Debug("Starting SQS worker version: %s with %d workers.", VERSION, workers)
 
   // create sqs client
   client, err := sqs.NewFrom(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), "us.east")
   if err != nil {
-    logger.Fatal("CLIENT ERROR:", err, "asdf", "asdfdasfd")
+    logger.Fatal("CLIENT ERROR: %v", err)
   }
 
   // get the SQS queue
   queue, err := client.GetQueue(os.Getenv("SQS_RECIEVE_QUEUE"))
   if err != nil {
-    logger.Fatal("QUEUE ERROR:", err)
+    logger.Fatal("QUEUE ERROR: %v", err)
   }
 
   // get some messages from the sqs queue
-  resp, err := queue.ReceiveMessageWithVisibilityTimeout(10, 60)
+  resp, err := queue.ReceiveMessageWithVisibilityTimeout(workers, 60)
   if err != nil {
-    logger.Fatal("Could not receive messages:", err)
+    logger.Fatal("Could not receive messages: %v", err)
   }
 
   if cap(resp.Messages) == 0 {
