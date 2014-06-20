@@ -1,3 +1,9 @@
+builder:
+  build: .
+  command: /bin/bash -c 'go build sqs_worker.go; sha256sum sqs_worker'
+  volumes:
+    - .:/app
+
 worker:
   build: .
   command: /bin/bash -c 'while go run sqs_worker.go -d; do echo ""; done'
