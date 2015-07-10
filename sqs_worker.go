@@ -77,6 +77,7 @@ func main() {
     if err != nil {
       logger.Error("Could not process SQS message: %s with JSON ERROR: %v", message.MessageId, err)
     } else {
+      // process the message in a goroutine
       wg.Add(1)
       go process(queue, message, wo, &wg)
     }

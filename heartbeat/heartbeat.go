@@ -19,6 +19,8 @@ func Start(q *sqs.Queue, m *sqs.Message) (heartbeat Heartbeat) {
   heartbeat.Message = m
   heartbeat.Queue = q
 
+  // start a goroutine to send updates to SQS letting them know we are still processing the message
+  // this will end after the ticker is Stop'ed
   go func() {
     for t := range heartbeat.ticker.C {
       // update SQS with each tick from the heartbeat
