@@ -15,7 +15,7 @@ func main() {
   logger.Info("Sending messages...")
   
   // create sqs client
-  client, err := sqs.NewFrom(os.Getenv("ADMIN_AWS_ACCESS_KEY_ID"), os.Getenv("ADMIN_AWS_SECRET_ACCESS_KEY"), "us.east")
+  client, err := sqs.NewFrom(os.Getenv("ADMIN_AWS_ACCESS_KEY_ID"), os.Getenv("ADMIN_AWS_SECRET_ACCESS_KEY"), "us-east-1")
   if err != nil {
     logger.Fatal("CLIENT ERROR:", err, "asdf", "asdfdasfd")
   }

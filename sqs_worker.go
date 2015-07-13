@@ -13,7 +13,7 @@ import "github.com/crowdmob/goamz/sqs"
 import "github.com/ianneub/logger"
 
 const (
-  VERSION = "1.1.1"
+  VERSION = "2.0.0"
 )
 
 func init() {
@@ -46,7 +46,7 @@ func main() {
   logger.Debug("Starting SQS worker version: %s with %d workers.", VERSION, workers)
 
   // create sqs client
-  client, err := sqs.NewFrom(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), "us.east")
+  client, err := sqs.NewFrom(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), "us-east-1")
   if err != nil {
     logger.Fatal("CLIENT ERROR: %v", err)
   }
@@ -57,43 +57,42 @@ func main() {
     logger.Fatal("QUEUE ERROR: %v", err)
   }
 
-  // get some messages from the sqs queue
-  resp, err := queue.ReceiveMessageWithVisibilityTimeout(workers, 60)
-  if err != nil {
-    logger.Fatal("Could not receive messages: %v", err)
-  }
-
-  if cap(resp.Messages) == 0 {
-    logger.Debug("Did not find any messages in the queue.")
-  }
-
   // create the wait group
   var wg sync.WaitGroup
-  
-  // for each message
-  for _, message := range resp.Messages {
-    // get the message details
-    wo, err := work_order.NewFromJson(message.Body)
+
+  for {
+    // get some messages from the sqs queue
+    logger.Debug("Checking for messages on the queue...")
+    resp, err := queue.ReceiveMessageWithVisibilityTimeout(workers, 60)
     if err != nil {
-      logger.Error("Could not process SQS message: %s with JSON ERROR: %v", message.MessageId, err)
-    } else {
-      // process the message in a goroutine
-      wg.Add(1)
-      go process(queue, message, wo, &wg)
+      logger.Fatal("Could not receive messages: %v", err)
     }
+
+    if cap(resp.Messages) == 0 {
+      logger.Debug("Did not find any messages on the queue.")
+    }
+    
+    // for each message
+    for _, message := range resp.Messages {
+      // get the message details
+      wo, err := work_order.NewFromJson(message.Body)
+      if err != nil {
+        logger.Error("Could not process SQS message: %s with JSON ERROR: %v", message.MessageId, err)
+      } else {
+        // process the message in a goroutine
+        wg.Add(1)
+        go processMessage(queue, message, wo, &wg)
+      }
+    }
+
+    // wait for each goroutine to exit
+    wg.Wait()
   }
-
-  // wait for each goroutine to exit
-  wg.Wait()
-
-  // quit
-  logger.Debug("Exiting.")
-  os.Exit(0)
 
 }
 
 // process a message from the SQS queue. This should be run inside a goroutine.
-func process(q *sqs.Queue, m sqs.Message, wo work_order.WorkOrder, wg *sync.WaitGroup) {
+func processMessage(q *sqs.Queue, m sqs.Message, wo work_order.WorkOrder, wg *sync.WaitGroup) {
   logger.Debug("Starting process on %d from '%s'", wo.Id, m.MessageId)
 
   // start heartbeat
