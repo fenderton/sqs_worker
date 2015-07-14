@@ -1,0 +1,7 @@
+machine:
+  services:
+    - docker
+
+dependencies:
+  override:
+    - docker run -v $(PWD):/usr/src/sqs_worker -w /usr/src/sqs_worker golang:1.4 make docker-compile
