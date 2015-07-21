@@ -36,26 +36,31 @@ func init() {
 }
 
 func main() {
+  logger.Info("Starting worker v%s", VERSION)
+
   // get worker count
   workers, err := strconv.Atoi(os.Getenv("WORKER_COUNT"))
   if err != nil {
     workers = 10
   }
+  logger.Info("Worker count: %d", workers)
 
   // access key, secret key, receive queue and report queue should be in ENV variables
-  logger.Debug("Starting SQS worker version: %s with %d workers.", VERSION, workers)
+  logger.Info("SQS queue: %s", os.Getenv("SQS_WORKER_QUEUE"))
 
   // create sqs client
-  client, err := sqs.NewFrom(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), "us-east-1")
+  client, err := sqs.NewFrom(os.Getenv("SQS_WORKER_ACCESS_KEY"), os.Getenv("SQS_WORKER_SECRET_KEY"), "us-east-1")
   if err != nil {
     logger.Fatal("CLIENT ERROR: %v", err)
   }
 
   // get the SQS queue
-  queue, err := client.GetQueue(os.Getenv("SQS_RECIEVE_QUEUE"))
+  queue, err := client.GetQueue(os.Getenv("SQS_WORKER_QUEUE"))
   if err != nil {
     logger.Fatal("QUEUE ERROR: %v", err)
   }
+
+  logger.Info("Worker started.")
 
   // create the wait group
   var wg sync.WaitGroup
