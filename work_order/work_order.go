@@ -134,7 +134,7 @@ func (wo *WorkOrder) Report() (error error) {
   wo.response.Id = wo.Id
 
   // create sqs client
-  client, err := sqs.NewFrom(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), "us-east-1")
+  client, err := sqs.NewFrom(os.Getenv("SQS_WORKER_ACCESS_KEY"), os.Getenv("SQS_WORKER_SECRET_KEY"), "us-east-1")
   if err != nil {
     logger.Error("Could not report: %d - %v", wo.Id, err)
     error = err
