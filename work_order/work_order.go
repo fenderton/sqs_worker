@@ -120,7 +120,7 @@ func (wo *WorkOrder) Execute() (error error) {
   // attach the output of the command to the result message
   wo.response.Result.Message = output.String()  
 
-  logger.Debug("Completed WorkOrder: %d", wo.Id)
+  logger.Info("Completed WorkOrder: %d", wo.Id)
   return
 }
 
@@ -128,7 +128,7 @@ func (wo *WorkOrder) Execute() (error error) {
 // This method requires that the WorkOrder has been Executed.
 func (wo *WorkOrder) Report() (error error) {
   report_queue := os.Getenv("SQS_REPORT_QUEUE")
-  logger.Debug("Sending response to '%s' for: %d", report_queue, wo.Id)
+  logger.Info("Sending response to '%s' for: %d", report_queue, wo.Id)
 
   // prepare the response object
   wo.response.Id = wo.Id

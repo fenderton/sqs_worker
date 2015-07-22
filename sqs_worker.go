@@ -13,7 +13,7 @@ import "github.com/crowdmob/goamz/sqs"
 import "github.com/ianneub/logger"
 
 const (
-  VERSION = "2.0.0"
+  VERSION = "2.0.1"
 )
 
 func init() {
