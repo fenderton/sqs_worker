@@ -14,7 +14,7 @@ import "github.com/AdRoll/goamz/sqs"
 import "github.com/ianneub/logger"
 
 const (
-  VERSION = "2.0.1"
+  VERSION = "2.0.2"
 )
 
 func init() {
