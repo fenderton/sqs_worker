@@ -1,7 +1,7 @@
 package heartbeat
 
 import "time"
-import "github.com/crowdmob/goamz/sqs"
+import "github.com/AdRoll/goamz/sqs"
 import "github.com/ianneub/logger"
 
 // simple struct that holds a reference to the ticker

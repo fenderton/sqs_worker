@@ -5,11 +5,12 @@ import "sync"
 import "flag"
 import "fmt"
 import "strconv"
+import "time"
 
 import "./heartbeat"
 import "./work_order"
 
-import "github.com/crowdmob/goamz/sqs"
+import "github.com/AdRoll/goamz/sqs"
 import "github.com/ianneub/logger"
 
 const (
@@ -70,7 +71,8 @@ func main() {
     logger.Debug("Checking for messages on the queue...")
     resp, err := queue.ReceiveMessageWithVisibilityTimeout(workers, 60)
     if err != nil {
-      logger.Fatal("Could not receive messages: %v", err)
+      logger.Error("Could not receive messages: %v", err)
+      time.Sleep(10 * time.Second)
     }
 
     if cap(resp.Messages) == 0 {

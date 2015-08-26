@@ -8,7 +8,7 @@ import "math/rand"
 
 import "../work_order"
 
-import "github.com/crowdmob/goamz/sqs"
+import "github.com/AdRoll/goamz/sqs"
 import "github.com/ianneub/logger"
 
 func main() {

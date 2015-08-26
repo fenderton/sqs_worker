@@ -7,7 +7,7 @@ import "os/exec"
 import "syscall"
 import "bytes"
 import "strings"
-import "github.com/crowdmob/goamz/sqs"
+import "github.com/AdRoll/goamz/sqs"
 import "github.com/ianneub/logger"
 
 /*
